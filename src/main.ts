@@ -1,7 +1,6 @@
-import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/source-serif-4";
 import "@fontsource-variable/source-serif-4/wght-italic.css";
-import "@fontsource/caveat/600.css";
 import "./gaya.css";
 import {
   beranda,
@@ -9,59 +8,65 @@ import {
   kosakata,
   latihanDaftar,
   latihanStructure,
-  listeningDaftar,
   listeningSesi,
   materiDaftar,
   materiTopik,
   progres,
-  readingDaftar,
   readingSesi,
   simulasi,
 } from "./ui/halaman";
+import { IKON } from "./ui/ikon";
 
 const utama = document.querySelector<HTMLElement>("main")!;
 let bersihkan: () => void = () => {};
 
-const JUDUL = "Tembus";
-const RUTE: [RegExp, (m: HTMLElement, ...x: string[]) => () => void, string][] = [
-  [/^$/, beranda, ""],
-  [/^materi$/, materiDaftar, "Materi"],
-  [/^materi\/([\w-]+)$/, materiTopik, "Materi"],
-  [/^latihan$/, latihanDaftar, "Structure"],
-  [/^latihan\/(campur|structure|written|salah|topik\/[\w-]+)$/, latihanStructure, "Structure"],
-  [/^reading$/, readingDaftar, "Reading"],
-  [/^reading\/([\w-]+)$/, readingSesi, "Reading"],
-  [/^listening$/, listeningDaftar, "Listening"],
-  [/^listening\/([\w-]+)$/, listeningSesi, "Listening"],
-  [/^kosakata$/, kosakata, "Kosakata"],
-  [/^simulasi$/, simulasi, "Simulasi"],
-  [/^progres$/, progres, "Progres"],
+type Tab = "beranda" | "latihan" | "simulasi" | "progres";
+const TAB: { id: Tab; label: string; href: string; ikon: string }[] = [
+  { id: "beranda", label: "Beranda", href: "#/", ikon: IKON.rumah },
+  { id: "latihan", label: "Latihan", href: "#/latihan", ikon: IKON.pensil },
+  { id: "simulasi", label: "Simulasi", href: "#/simulasi", ikon: IKON.jam },
+  { id: "progres", label: "Progres", href: "#/progres", ikon: IKON.grafik },
+];
+const tautanTab = TAB.map((t) => `<a href="${t.href}" data-tab="${t.id}">${t.ikon}<span>${t.label}</span></a>`).join("");
+document.querySelector(".kepala .tab")!.innerHTML = tautanTab;
+document.querySelector(".bar-tab")!.innerHTML = tautanTab;
+
+type Halaman = (m: HTMLElement, ...x: string[]) => () => void;
+const RUTE: [RegExp, Halaman, Tab, string][] = [
+  [/^$/, beranda, "beranda", ""],
+  [/^latihan$/, latihanDaftar, "latihan", "Latihan"],
+  [/^(?:reading|listening)$/, (m) => latihanDaftar(m, location.hash.includes("listening") ? "listening" : "reading"), "latihan", "Latihan"],
+  [/^latihan\/(campur|structure|written|salah|topik\/[\w-]+)$/, latihanStructure, "latihan", "Structure"],
+  [/^reading\/([\w-]+)$/, readingSesi, "latihan", "Reading"],
+  [/^listening\/([\w-]+)$/, listeningSesi, "latihan", "Listening"],
+  [/^materi$/, materiDaftar, "latihan", "Materi"],
+  [/^materi\/([\w-]+)$/, materiTopik, "latihan", "Materi"],
+  [/^kosakata$/, kosakata, "latihan", "Kosakata"],
+  [/^simulasi$/, simulasi, "simulasi", "Simulasi"],
+  [/^progres$/, progres, "progres", "Progres"],
 ];
 
 function arahkan() {
-  const jalur = location.hash.replace(/^#\/?/, "").split("?")[0].replace(/\/$/, "");
+  // "#/latihan#reading?x" → jalur "latihan", bagian "reading"
+  const [jalur, bagian] = location.hash.replace(/^#\/?/, "").split("?")[0].replace(/\/$/, "").split("#");
   bersihkan();
-  for (const [re, f, bagian] of RUTE) {
+  document.body.classList.remove("fokus");
+  for (const [re, f, tab, judul] of RUTE) {
     const c = jalur.match(re);
     if (!c) continue;
-    bersihkan = f(utama, ...c.slice(1));
-    document.title = bagian ? `${bagian} — ${JUDUL}` : `${JUDUL} — latihan TOEFL ITP`;
-    tandaiNav(bagian);
+    bersihkan = jalur === "latihan" ? latihanDaftar(utama, bagian) : f(utama, ...c.slice(1));
+    document.title = judul ? `${judul} — Tembus` : "Tembus — latihan TOEFL ITP";
+    document.querySelectorAll<HTMLAnchorElement>("[data-tab]").forEach((a) => {
+      if (a.dataset.tab === tab) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
     return;
   }
   bersihkan = halamanHilang(utama);
-  tandaiNav("");
-}
-
-function tandaiNav(bagian: string) {
-  document.querySelectorAll<HTMLAnchorElement>(".nav a").forEach((a) => {
-    if (a.textContent === bagian) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  });
 }
 
 window.addEventListener("hashchange", () => {
   arahkan();
-  window.scrollTo({ top: 0 });
+  if (!location.hash.split("#")[2]) window.scrollTo({ top: 0 });
 });
 arahkan();

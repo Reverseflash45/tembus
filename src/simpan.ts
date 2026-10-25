@@ -14,10 +14,15 @@ export type Data = {
   simulasi: HasilSimulasi[];
   /** tanggal (YYYY-MM-DD lokal) hari-hari latihan */
   hari: string[];
+  /** langkah rencana harian yang sudah selesai hari ini */
+  harian: { tanggal: string; selesai: Langkah[] };
 };
 
+export type Langkah = "grammar" | "reading" | "listening" | "kosakata";
+export const URUTAN_LANGKAH: Langkah[] = ["grammar", "reading", "listening", "kosakata"];
+
 const KUNCI = "tembus:v1";
-const kosong = (): Data => ({ versi: 1, nama: "", target: [5, 0, 0], jawaban: {}, kartu: {}, simulasi: [], hari: [] });
+const kosong = (): Data => ({ versi: 1, nama: "", target: [5, 0, 0], jawaban: {}, kartu: {}, simulasi: [], hari: [], harian: { tanggal: "", selesai: [] } });
 
 function muat(): Data {
   try {
@@ -32,6 +37,7 @@ function muat(): Data {
       kartu: typeof d.kartu === "object" && d.kartu ? d.kartu : {},
       simulasi: Array.isArray(d.simulasi) ? d.simulasi : [],
       hari: Array.isArray(d.hari) ? d.hari : [],
+      harian: d.harian && Array.isArray(d.harian.selesai) ? d.harian : k.harian,
     };
   } catch {
     return kosong();
@@ -87,6 +93,26 @@ export function runtutan(hari = data.hari, kini = new Date()) {
   }
   return n;
 }
+
+/** Langkah rencana hari ini yang sudah beres (otomatis kosong lagi besoknya). */
+export function langkahSelesai(): Langkah[] {
+  return data.harian.tanggal === tanggalLokal() ? data.harian.selesai : [];
+}
+
+export function tandaiLangkah(l: Langkah) {
+  const kini = langkahSelesai();
+  if (kini.includes(l)) return;
+  data.harian = { tanggal: tanggalLokal(), selesai: [...kini, l] };
+  simpan();
+}
+
+export function aturTarget(skor: number) {
+  const s = Math.max(310, Math.min(677, Math.round(skor / 10) * 10));
+  data.target = String(s).split("").map(Number) as [number, number, number];
+  simpan();
+}
+
+export const targetSkor = () => Number(data.target.join(""));
 
 export function hapusSemua() {
   const k = kosong();

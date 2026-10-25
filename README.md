@@ -1,6 +1,8 @@
 # Tembus
 
-Latihan TOEFL ITP dengan pembahasan bahasa Indonesia. Tampilannya meniru LJK: jawaban diarsir pensil, lalu dikoreksi dengan coretan pulpen merah.
+Latihan TOEFL ITP dengan pembahasan bahasa Indonesia. Satu soal per layar, langsung dikoreksi: pilih jawaban, panel di bawah layar langsung menunjukkan benar/salah dan pembahasannya, lalu tekan **Lanjut**.
+
+Beranda berisi **rencana hari ini** (10 soal grammar, 1 bacaan, 8 dialog, 12 kartu kosakata). Satu tombol langsung membawa ke langkah berikutnya, dan langkah yang selesai tercentang otomatis.
 
 **Coba:** https://tembus.raffstw.my.id
 
