@@ -1425,3 +1425,8 @@ body.fokus main {
     transition: none;
   }
 }
+
+/* sebelum halaman dirender skrip: kaki halaman tetap di bawah layar, tidak tampil lalu terdorong */
+#utama:empty {
+  min-height: 100vh;
+}
